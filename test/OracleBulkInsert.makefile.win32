@@ -1,0 +1,16 @@
+all : OracleBulkInsert.exe
+
+mtrac.exe : OracleBulkInsert.obj
+
+mtrac.obj : OracleBulkInsert.c
+
+.c.obj:
+    cl /nologo /c /MT /DEMBED /Fo /I"odpi\include" $<
+
+.obj.exe:
+    link /nologo *.obj /out:$@
+
+clean:
+    @if exist mtrac.obj del /F /Q OracleBulkInsert.obj
+    @if exist mtrac.exe del /F /Q OracleBulkInsert.exe
+	

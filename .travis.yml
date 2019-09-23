@@ -25,7 +25,6 @@ before_script:
  - docker version
  - docker info
  - kerl list installations
- - lcov --directory . --zerocounters
 
 script:
  - docker pull konnexionsgmbh/db_11_2_xe

@@ -7,9 +7,12 @@
 -define(DPI_MINOR_VERSION, 0).
 -define(MAX_NUMBERS, 100000).
 
-all() -> [test].
+all() ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	[test].
 
 test(_) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Opts = [
     	{host, ct:get_config(host)},
     	{port, 1521},
@@ -18,6 +21,7 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Queries = [
 		lists:flatten(
 			io_lib:format(
@@ -25,7 +29,9 @@ test(_) ->
 			)
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
 			"~p rows inserted in ~p seconds",

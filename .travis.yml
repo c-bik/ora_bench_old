@@ -54,5 +54,5 @@ script:
  - cd -
  - ls -alF test/bin/
  - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/oranif_SUITE.erl
- - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/jamdb_oracle_SUITE.erl
+ #- rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/jamdb_oracle_SUITE.erl
  

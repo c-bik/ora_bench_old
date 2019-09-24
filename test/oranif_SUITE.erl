@@ -83,7 +83,12 @@ setup(Connection, User, Password) ->
 	),
 
 	DropStmt = dpi:conn_prepareStmt(Conn, false, <<"drop table test">>, <<>>),
-	0 = dpi:stmt_execute(DropStmt, []),
+	case catch dpi:stmt_execute(DropStmt, []) of
+		0 -> ok;
+		{error, _, _, #{code := 942}} -> ok;
+		BadError ->
+			ct:pal("===> ~p:~p SHOULDN'T happen ~p", [?MODULE, ?LINE, BadError])
+	end,
 	dpi:stmt_close(DropStmt, <<>>),
 
 	CreateStmt = dpi:conn_prepareStmt(

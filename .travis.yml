@@ -2,8 +2,8 @@ sudo: required
 
 group: edge
 
-#services:
-# - docker
+services:
+ - docker
 
 before_install:
  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -14,17 +14,17 @@ before_install:
 install:
  - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 
-#env:
-# - DOCKER_MACHINE_STATUS="Running" DOCKER_MACHINE_IP="0.0.0.0"
+env:
+ - DOCKER_MACHINE_STATUS="Running" DOCKER_MACHINE_IP="0.0.0.0"
 
 language: erlang
 otp_release:
   - 20.2
 
-#before_script:
-# - docker version
-# - docker info
-# - kerl list installations
+before_script:
+ - docker version
+ - docker info
+ - kerl list installations
 
 script:
  #- docker pull konnexionsgmbh/db_11_2_xe

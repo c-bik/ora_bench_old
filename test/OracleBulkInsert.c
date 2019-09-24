@@ -104,6 +104,7 @@ int main(const int argCount, char *argVec[])
     exit(1);
   }
   dpiConn_commit(conn);
+  dpiStmt_close(stmt, NULL, 0);
   dpiVar_release(stringColVar);
   dpiConn_close(conn, DPI_MODE_CONN_CLOSE_DEFAULT, NULL, 0);
   dpiContext_destroy(ctx);

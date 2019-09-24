@@ -26,30 +26,36 @@ test(_) ->
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
 	try
-		{Time, _Result} = timer:tc(fun test_i/2, [Opts, Quaries]),
+		{Time, Result} = timer:tc(fun test_i/2, [Opts, Quaries]),
 		ct:pal(
 			"~p rows inserted in ~p seconds",
-			[?MAX_NUMBERS, Time / 1000000]
+			[?MAX_NUMBERS - Result, Time / 1000000]
 		)
 	catch
 		Class:Error ->
 		ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
 	end.
 
-test_i(_, []) -> ok;
+test_i(_, []) -> 0;
 test_i([{_,_} | _] = Opts, SQLs) ->
 	{ok, ConnRef} = setup(Opts),
-	test_i(ConnRef, SQLs),
+	RemainingSQLs = test_i(ConnRef, SQLs),
 	ok = jamdb_oracle:stop(ConnRef),
-	io:format(user, "~n", []);
+	io:format(user, "~n", []),
+	length(SQLs -- RemainingSQLs);
 test_i(ConnRef, [SQL | SQLs]) ->
-	{ok, [{affected_rows,1}]} = jamdb_oracle:sql_query(ConnRef, SQL),
-	SQLsLen = length(SQLs),
-	if SQLsLen rem 100 == 0 ->
-		io:format(user, " ~p", [SQLsLen]);
-		true -> ok
-	end,
-	test_i(ConnRef, SQLs).
+	case jamdb_oracle:sql_query(ConnRef, SQL) of
+		{ok, [{affected_rows, 1}]} ->
+			SQLsLen = length(SQLs),
+			if SQLsLen rem 100 == 0 ->
+				io:format(user, " ~p", [SQLsLen]);
+				true -> ok
+			end,
+			test_i(ConnRef, SQLs);
+		{ok, [{proc_result, _, Error}]} ->
+			ct:pal("===> Abort reason ~p", [Error]),
+			SQLs
+	end.
 
 setup(Opts) ->
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),

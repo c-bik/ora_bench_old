@@ -45,6 +45,7 @@ script:
  - ./rebar3 as test compile
  - cd test/
  - make
+ - ls -alF bin/
  #- export LD_LIBRARY_PATH=./priv/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
  #- export LD_LIBRARY_PATH=./c_src/odpi/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
  #- while [ "`docker inspect -f {{.State.Health.Status}} oranif_db`" != "healthy" ]; do docker ps -a; sleep 60; done

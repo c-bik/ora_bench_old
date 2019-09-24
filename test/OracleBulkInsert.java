@@ -2,7 +2,6 @@
 javac OracleBulkInsert.java
 java -cp "ojdbc7.jar;" OracleBulkInsert
 */
-
 import java.io.*;
 import java.sql.*;
 

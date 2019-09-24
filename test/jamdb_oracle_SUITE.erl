@@ -18,7 +18,7 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
-	Quaries = [
+	Queries = [
 		lists:flatten(
 			io_lib:format(
 				"insert into test(item) values('4179~7..0B')", [Count]
@@ -26,7 +26,7 @@ test(_) ->
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
 	try
-		{Time, Result} = timer:tc(fun test_i/2, [Opts, Quaries]),
+		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
 			"~p rows inserted in ~p seconds",
 			[?MAX_NUMBERS - Result, Time / 1000000]
@@ -36,13 +36,13 @@ test(_) ->
 		ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
 	end.
 
-test_i(_, []) -> 0;
 test_i([{_,_} | _] = Opts, SQLs) ->
 	{ok, ConnRef} = setup(Opts),
-	RemainingSQLs = test_i(ConnRef, SQLs),
+	test_i(ConnRef, SQLs);
+test_i(ConnRef, []) ->
 	ok = jamdb_oracle:stop(ConnRef),
 	io:format(user, "~n", []),
-	length(SQLs -- RemainingSQLs);
+	0;
 test_i(ConnRef, [SQL | SQLs]) ->
 	case jamdb_oracle:sql_query(ConnRef, SQL) of
 		{ok, [{affected_rows, 1}]} ->
@@ -54,7 +54,7 @@ test_i(ConnRef, [SQL | SQLs]) ->
 			test_i(ConnRef, SQLs);
 		{ok, [{proc_result, _, Error}]} ->
 			ct:pal("===> Abort reason ~p", [Error]),
-			SQLs
+			length(SQLs) + 1
 	end.
 
 setup(Opts) ->

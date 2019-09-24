@@ -1,11 +1,6 @@
 -module(oranif_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
--ifdef(CONSOLE).
-rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/oranif_SUITE.erl
-.
--endif.
-
 -export([all/0, test/1]).
 
 -define(DPI_MAJOR_VERSION, 3).

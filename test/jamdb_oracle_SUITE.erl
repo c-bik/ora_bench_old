@@ -12,7 +12,6 @@ all() ->
 	[test].
 
 test(_) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Opts = [
     	{host, ct:get_config(host)},
     	{port, 1521},
@@ -21,7 +20,6 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Queries = [
 		lists:flatten(
 			io_lib:format(
@@ -29,7 +27,6 @@ test(_) ->
 			)
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
 	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
@@ -43,13 +40,16 @@ test(_) ->
 	end.
 
 test_i([{_,_} | _] = Opts, SQLs) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = setup(Opts),
 	test_i(ConnRef, SQLs);
 test_i(ConnRef, []) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	ok = jamdb_oracle:stop(ConnRef),
 	io:format(user, "~n", []),
 	0;
 test_i(ConnRef, [SQL | SQLs]) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	case jamdb_oracle:sql_query(ConnRef, SQL) of
 		{ok, [{affected_rows, 1}]} ->
 			SQLsLen = length(SQLs),

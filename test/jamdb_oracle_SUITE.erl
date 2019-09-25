@@ -64,6 +64,7 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p Opts ~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
 	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),

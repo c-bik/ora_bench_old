@@ -40,7 +40,9 @@ test(_) ->
 
 test_i([{_,_} | _] = Opts, SQLs) ->
 	try
+		ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, jamdb_oracle:module_info(exports)]),
 		{ok, ConnRef} = setup(Opts),
+		ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		test_i(ConnRef, SQLs)
 	catch
 		Class:Exception ->

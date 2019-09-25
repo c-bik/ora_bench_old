@@ -40,7 +40,6 @@ test(_) ->
 
 test_i([{_,_} | _] = Opts, SQLs) ->
 	try
-		ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, jamdb_oracle:module_info(exports)]),
 		{ok, ConnRef} = setup(Opts),
 		ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		test_i(ConnRef, SQLs)
@@ -73,6 +72,12 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
+	ct:pal(
+		"=[DEBUG]=> ~p:~p:~p~n~p~n~p",
+		[
+			?MODULE, ?FUNCTION_NAME, ?LINE,
+		 	Opts, catch jamdb_oracle:start_link(Opts)
+		]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
 	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),

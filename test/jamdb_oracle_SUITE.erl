@@ -8,7 +8,7 @@
 -define(MAX_NUMBERS, 100000).
 
 all() ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	[test].
 
 test(_) ->
@@ -28,7 +28,6 @@ test(_) ->
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
 	try
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
 			"~p rows inserted in ~p seconds",
@@ -40,16 +39,24 @@ test(_) ->
 	end.
 
 test_i([{_,_} | _] = Opts, SQLs) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
-	{ok, ConnRef} = setup(Opts),
-	test_i(ConnRef, SQLs);
+	try
+		{ok, ConnRef} = setup(Opts),
+		test_i(ConnRef, SQLs)
+	catch
+		Class:Exception ->
+			ct:pal(
+				"=[ERROR]=> ~p:~p:~p ~p:~p~n~p",
+				[
+					?MODULE, ?FUNCTION_NAME, ?LINE, Class, Exception,
+					erlang:get_stacktrace()
+				]
+			)
+	end;
 test_i(ConnRef, []) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	ok = jamdb_oracle:stop(ConnRef),
 	io:format(user, "~n", []),
 	0;
 test_i(ConnRef, [SQL | SQLs]) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	case jamdb_oracle:sql_query(ConnRef, SQL) of
 		{ok, [{affected_rows, 1}]} ->
 			SQLsLen = length(SQLs),
@@ -64,7 +71,6 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p Opts ~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
 	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),

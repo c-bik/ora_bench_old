@@ -28,7 +28,7 @@ test(_) ->
 		{Time, Result} = timer:tc(fun test_i/3, [Connection, User, Password]),
 		if Result /= ok -> ct:pal("ERROR ~p\n", [Result]); true -> ok end,
 		ct:pal(
-			"~p rows inserted in ~p seconds",
+			"oranif inserted ~p rows in ~p seconds",
 			[?MAX_NUMBERS, Time / 1000000]
 		)
 	catch
@@ -37,10 +37,10 @@ test(_) ->
 	end.
 
 test_i(Connection, User, Password) ->
-	ct:pal(
-		"===> Connect with:~n\tConnection ~s~n\tUser ~s~n\tPassword ~s",
-		[Connection, User, Password]
-	),
+	%ct:pal(
+	%	"===> Connect with:~n\tConnection ~s~n\tUser ~s~n\tPassword ~s",
+	%	[Connection, User, Password]
+	%),
 	Ctx = dpi:context_create(?DPI_MAJOR_VERSION, ?DPI_MINOR_VERSION),
 	Conn = dpi:conn_create(
 		Ctx, User, Password, Connection,

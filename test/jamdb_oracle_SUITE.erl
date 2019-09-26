@@ -33,7 +33,7 @@ test(_) ->
 	try
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
-			"~p rows inserted in ~p seconds",
+			"jamdb_oracle insrtred ~p rows in ~p seconds",
 			[?MAX_NUMBERS - Result, Time / 1000000]
 		)
 	catch
@@ -78,7 +78,7 @@ test_i(ConnRef, [SQL | SQLs]) ->
 setup(Opts) ->
 	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
-	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
+	%ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),
 	case jamdb_oracle:sql_query(ConnRef, "drop table test") of
 		{ok,[{proc_result, 942, _}]} -> ok;

@@ -77,7 +77,7 @@ test_i(ConnRef, [SQL | SQLs]) ->
 
 setup(Opts) ->
 	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
-	Result = (catch apply(jamdb_oracle, start_link, [Opts])),
+	Result = (catch apply(erlang, list_to_integer, [Opts])),
 	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Result]),
 	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),

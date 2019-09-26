@@ -8,11 +8,11 @@
 -define(MAX_NUMBERS, 100000).
 
 all() ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	[test].
 
 test(_) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Opts = [
     	{host, ct:get_config(host)},
     	{port, 1521},
@@ -21,7 +21,7 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Queries = [
 		lists:flatten(
 			io_lib:format(
@@ -29,7 +29,7 @@ test(_) ->
 			)
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
@@ -42,10 +42,10 @@ test(_) ->
 	end.
 
 test_i([{_,_} | _] = Opts, SQLs) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
 		{ok, ConnRef} = setup(Opts),
-		ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+		%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 		test_i(ConnRef, SQLs)
 	catch
 		Class:Exception ->
@@ -76,15 +76,7 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
-	process_flag(trap_exit, true),
-	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
-	Result = (catch apply(jamdb_oracle, start_link, [Opts])),
-	receive
-		Error ->
-			ct:pal("=[ERROR]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Error])
-		after 1000 -> ok
-	end,
-	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
 	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),

@@ -76,9 +76,14 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
+	process_flag(trap_exit, true),
 	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
 	Result = (catch apply(jamdb_oracle, start_link, [Opts])),
-	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Result]),
+	receive
+		Error ->
+			ct:pal("=[ERROR]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Error])
+		after 1000 -> ok
+	end,
 	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
 	ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),

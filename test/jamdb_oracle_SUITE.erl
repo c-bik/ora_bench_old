@@ -8,10 +8,11 @@
 -define(MAX_NUMBERS, 100000).
 
 all() ->
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	[test].
 
 test(_) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Opts = [
     	{host, ct:get_config(host)},
     	{port, 1521},
@@ -20,6 +21,7 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Queries = [
 		lists:flatten(
 			io_lib:format(
@@ -27,6 +29,7 @@ test(_) ->
 			)
 		) || Count <- lists:seq(0, ?MAX_NUMBERS)
 	],
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
 		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
 		ct:pal(
@@ -35,10 +38,11 @@ test(_) ->
 		)
 	catch
 		Class:Error ->
-		ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
+			ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
 	end.
 
 test_i([{_,_} | _] = Opts, SQLs) ->
+	ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
 		{ok, ConnRef} = setup(Opts),
 		ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
@@ -72,9 +76,9 @@ test_i(ConnRef, [SQL | SQLs]) ->
 	end.
 
 setup(Opts) ->
-	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
+	ct:pal("=[DEBUG]=> ~p:~p:~p~n~p", [?MODULE, ?FUNCTION_NAME, ?LINE, Opts]),
 	ct:pal(
-		"=[DEBUG]=> ~p:~p:~p~n~p~n~p",
+		"=[DEBUG]=> ~p:~p:~p~n~p",
 		[
 			?MODULE, ?FUNCTION_NAME, ?LINE, catch apply(jamdb_oracle, start_link, [Opts])
 		]

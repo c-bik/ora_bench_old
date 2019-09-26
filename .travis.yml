@@ -45,8 +45,8 @@ script:
  - while [ "`docker inspect -f {{.State.Health.Status}} oranif_db`" != "healthy" ]; do docker ps -a; sleep 60; done
  - sleep 60
  - docker ps -a
- - cd test/
- - make
- - echo exit | sqlplus sys/oracle@$DOCKER_MACHINE_IP:1521/XE as sysdba @travis $(pwd)/log/
- - cd -
+ #- cd test/
+ #- make
+ - echo exit | sqlplus sys/oracle@$DOCKER_MACHINE_IP:1521/XE as sysdba @test/travis.sql $(pwd)/log/
+ #- cd -
  - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg

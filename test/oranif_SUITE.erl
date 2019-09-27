@@ -26,17 +26,22 @@ test(_) ->
 
 	try
 		setup(Connection, User, Password),
-		{Time, Inserted} = timer:tc(
-			fun test_i/3, [Connection, User, Password]
+		{InsertTime, Inserted} = timer:tc(
+			fun insert/3, [Connection, User, Password]
 		),
-		Seconds = Time / 1000000,
-		ct:pal("ORANIF inserted ~p rows in ~p seconds", [Inserted, Seconds])
+		InsertSec = InsertTime / 1000000,
+		ct:pal("ORANIF inserted ~p rows in ~p seconds", [Inserted, InsertSec]),
+		{SelectTime, Selected} = timer:tc(
+			fun select/3, [Connection, User, Password]
+		),
+		SelectSec = SelectTime / 1000000,
+		ct:pal("ORANIF selected ~p rows in ~p seconds", [Selected, SelectSec])
 	catch
 		Class:Error ->
 		ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
 	end.
 
-test_i(Connection, User, Password) ->
+insert(Connection, User, Password) ->
 	Ctx = dpi:context_create(?DPI_MAJOR_VERSION, ?DPI_MINOR_VERSION),
 	Conn = dpi:conn_create(
 		Ctx, User, Password, Connection,
@@ -49,7 +54,7 @@ test_i(Connection, User, Password) ->
 	),
 
 	Stmt = dpi:conn_prepareStmt(
-	Conn, false, l2b(ct:get_config(insert_oranif)), <<>>
+		Conn, false, l2b(ct:get_config(insert_oranif)), <<>>
 	),
 	dpi:stmt_bindByName(Stmt, <<"ITEM">>, ItemVar),
 	Inserted = set_from_bytes(ItemVar, Stmt),
@@ -60,6 +65,27 @@ test_i(Connection, User, Password) ->
 	dpi:conn_close(Conn, [], <<>>),
 	dpi:context_destroy(Ctx),
 	Inserted.
+
+select(Connection, User, Password) ->
+	Ctx = dpi:context_create(?DPI_MAJOR_VERSION, ?DPI_MINOR_VERSION),
+	Conn = dpi:conn_create(
+		Ctx, User, Password, Connection,
+		#{encoding => "AL32UTF8", nencoding => "AL32UTF8"}, #{}
+	),
+
+	Stmt = dpi:conn_prepareStmt(Conn, false, l2b(ct:get_config(select)), <<>>),
+	dpi:stmt_execute(Stmt, []),
+
+	dpi:stmt_fetch(Stmt),
+	#{data := Data} = dpi:stmt_getQueryValue(Stmt, 1),
+	10 = byte_size(dpi:data_get(Data)),
+	dpi:data_release(Data),
+
+	dpi:conn_commit(Conn),
+	dpi:stmt_close(Stmt, <<>>),
+	dpi:conn_close(Conn, [], <<>>),
+	dpi:context_destroy(Ctx),
+	0.
 
 l2b(B) when is_binary(B) -> B;
 l2b(L) when is_list(L) -> list_to_binary(L).
@@ -76,7 +102,7 @@ set_from_bytes(Last, Count, ItemVar, Stmt) when Count - Last >= ?MAX_VARS ->
 	end;
 set_from_bytes(LastCount, Count, ItemVar, Stmt) ->
 	Item = list_to_binary(io_lib:format("~10..0B", [Count])),
-	dpi:var_setFromBytes(ItemVar, Count, Item),
+	dpi:var_setFromBytes(ItemVar, Count - LastCount, Item),
 	set_from_bytes(LastCount, Count + 1, ItemVar, Stmt).
 
 setup(Connection, User, Password) ->

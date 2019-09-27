@@ -8,11 +8,9 @@
 -define(MAX_NUMBERS, 100000).
 
 all() ->
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	[test].
 
 test(_) ->
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	Opts = [
     	{host, ct:get_config(host)},
     	{port, 1521},
@@ -21,32 +19,22 @@ test(_) ->
     	{service_name, ct:get_config(service_name)},
     	{app_name, "test"}
 	],
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
-	Queries = [
-		lists:flatten(
-			io_lib:format(
-				"insert into test(item) values('4179~7..0B')", [Count]
-			)
-		) || Count <- lists:seq(0, ?MAX_NUMBERS)
-	],
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	try
-		{Time, Result} = timer:tc(fun test_i/2, [Opts, Queries]),
-		ct:pal(
-			"jamdb_oracle insrtred ~p rows in ~p seconds",
-			[?MAX_NUMBERS - Result, Time / 1000000]
-		)
+		{InsertTime, Inserted} = timer:tc(fun insert/1, [Opts]),
+		InsertSec = InsertTime / 1000000,
+		ct:pal("JAMDB inserted ~p rows in ~p seconds", [Inserted, InsertSec]),
+		{SelectTime, Selected} = timer:tc(fun select/1, [Opts]),
+		SelectSec = SelectTime / 1000000,
+		ct:pal("JAMDB selected ~p rows in ~p seconds", [Selected, SelectSec])
 	catch
 		Class:Error ->
 			ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
 	end.
 
-test_i([{_,_} | _] = Opts, SQLs) ->
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
-	try
-		{ok, ConnRef} = setup(Opts),
-		%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
-		test_i(ConnRef, SQLs)
+insert([{_,_} | _] = Opts) ->
+	try setup(Opts) of
+		{ok, ConnRef} -> 
+			insert(ConnRef, ct:get_config(insert_jamdb), 0)
 	catch
 		Class:Exception ->
 			ct:pal(
@@ -55,24 +43,60 @@ test_i([{_,_} | _] = Opts, SQLs) ->
 					?MODULE, ?FUNCTION_NAME, ?LINE, Class, Exception,
 					erlang:get_stacktrace()
 				]
-			)
-	end;
-test_i(ConnRef, []) ->
-	ok = jamdb_oracle:stop(ConnRef),
-	io:format(user, "~n", []),
-	0;
-test_i(ConnRef, [SQL | SQLs]) ->
-	case jamdb_oracle:sql_query(ConnRef, SQL) of
+			),
+			0
+	end.
+insert(ConnRef, SqlFmt, Count) ->
+	SQL = lists:flatten(io_lib:format(SqlFmt, [Count])),
+	case catch jamdb_oracle:sql_query(ConnRef, SQL) of
 		{ok, [{affected_rows, 1}]} ->
-			SQLsLen = length(SQLs),
-			if SQLsLen rem 100 == 0 ->
-				io:format(user, " ~p", [SQLsLen]);
+			if Count rem 1000 == 0 ->
+				io:format(user, " ~p", [Count]);
 				true -> ok
 			end,
-			test_i(ConnRef, SQLs);
+			insert(ConnRef, SqlFmt, Count + 1);
 		{ok, [{proc_result, _, Error}]} ->
 			ct:pal("===> Abort reason ~p", [Error]),
-			length(SQLs) + 1
+			io:format(user, " ~p~n", [Count]),
+			Count;
+		Error ->
+			ct:pal("===> Abort reason ~p", [Error]),
+			io:format(user, " ~p~n", [Count]),
+			Count
+	end.
+
+select([{_,_} | _] = Opts) ->
+	try setup(Opts) of
+		{ok, ConnRef} -> 
+			select(ConnRef, ct:get_config(insert_jamdb), 0)
+	catch
+		Class:Exception ->
+			ct:pal(
+				"=[ERROR]=> ~p:~p:~p ~p:~p~n~p",
+				[
+					?MODULE, ?FUNCTION_NAME, ?LINE, Class, Exception,
+					erlang:get_stacktrace()
+				]
+			),
+			0
+	end.
+select(ConnRef, SqlFmt, Count) ->
+	SQL = lists:flatten(io_lib:format(SqlFmt, [Count])),
+	case catch jamdb_oracle:sql_query(ConnRef, SQL) of
+		{ok, [{affected_rows, 1}]} ->
+			if Count rem 1000 == 0 ->
+				io:format(user, " ~p", [Count]);
+				true -> ok
+			end,
+			insert(ConnRef, SqlFmt, Count + 1);
+		{ok, [{proc_result, _, Error}]} ->
+			ct:pal("===> Abort reason ~p", [Error]),
+			io:format(user, " ~p~n", [Count]),
+			Count;
+		Error ->
+			ct:pal("===> Abort reason ~p", [Error]),
+			io:format(user, " ~p~n", [Count]),
+			Count
 	end.
 
 setup(Opts) ->

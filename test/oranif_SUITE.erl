@@ -109,8 +109,8 @@ set_from_bytes(Last, Count, ItemVar, Stmt) when Count - Last >= ?MAX_VARS ->
 		ok ->
 			io:format(user, " ~p", [Count]),
 			set_from_bytes(Count, Count, ItemVar, Stmt);
-		Error ->
-			ct:pal("DB Limits reached~n~p", [Error]),
+		{'EXIT',{{error, _, _, #{message := Error}}, _}} ->
+			ct:pal("DB Limits reached : ~s", [Error]),
 			io:format(user, " ~p~n", [Count]),
 			Count
 	end;

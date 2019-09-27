@@ -79,7 +79,6 @@ select(Connection, User, Password) ->
 
 	Selected = get_bytes(Stmt),
 
-	dpi:conn_commit(Conn),
 	dpi:stmt_close(Stmt, <<>>),
 	dpi:conn_close(Conn, [], <<>>),
 	dpi:context_destroy(Ctx),
@@ -110,8 +109,8 @@ set_from_bytes(Last, Count, ItemVar, Stmt) when Count - Last >= ?MAX_VARS ->
 			io:format(user, " ~p", [Count]),
 			set_from_bytes(Count, Count, ItemVar, Stmt);
 		{'EXIT',{{error, _, _, #{message := Error}}, _}} ->
-			ct:pal("DB Limits reached : ~s", [Error]),
 			io:format(user, " ~p~n", [Count]),
+			ct:pal("DB Limits reached : ~s", [Error]),
 			Count
 	end;
 set_from_bytes(LastCount, Count, ItemVar, Stmt) ->

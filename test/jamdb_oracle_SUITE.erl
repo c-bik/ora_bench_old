@@ -88,21 +88,15 @@ select(ConnRef, SqlFmt, Count) ->
 				io:format(user, " ~p", [Count]);
 				true -> ok
 			end,
-			insert(ConnRef, SqlFmt, Count + 1);
-		{ok, [{proc_result, _, Error}]} ->
-			ct:pal("===> Abort reason ~p", [Error]),
-			io:format(user, " ~p~n", [Count]),
-			Count;
+			select(ConnRef, SqlFmt, Count + 1);
 		Error ->
-			ct:pal("===> Abort reason ~p", [Error]),
 			io:format(user, " ~p~n", [Count]),
+			ct:pal("===> Abort reason ~p", [Error]),
 			Count
 	end.
 
 setup(Opts) ->
-	%ct:pal("=[DEBUG]=> ~p:~p:~p", [?MODULE, ?FUNCTION_NAME, ?LINE]),
 	{ok, ConnRef} = jamdb_oracle:start_link(Opts),
-	%ct:pal("===> Connect with:~n\tOpts ~p", [Opts]),
 	{ok, []} = jamdb_oracle:sql_query(ConnRef, "COMON;"),
 	case jamdb_oracle:sql_query(ConnRef, "drop table test") of
 		{ok,[{proc_result, 942, _}]} -> ok;

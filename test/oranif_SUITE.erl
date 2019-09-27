@@ -67,8 +67,12 @@ l2b(L) when is_list(L) -> list_to_binary(L).
 set_from_bytes(ItemVar, Stmt) -> set_from_bytes(0, 0, ItemVar, Stmt).
 set_from_bytes(Last, Count, ItemVar, Stmt) when Count - Last >= ?MAX_VARS ->
 	case catch dpi:stmt_executeMany(Stmt, [], ?MAX_VARS) of
-		ok -> set_from_bytes(Count, Count, ItemVar, Stmt);
-		_ -> Count
+		ok ->
+			io:format(user, " ~p", [Count]),
+			set_from_bytes(Count, Count, ItemVar, Stmt);
+		_ ->
+			io:format(user, "~n", []),
+			Count
 	end;
 set_from_bytes(LastCount, Count, ItemVar, Stmt) ->
 	Item = list_to_binary(io_lib:format("~10..0B", [Count])),

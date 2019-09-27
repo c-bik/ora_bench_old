@@ -7,22 +7,23 @@ env:
 before_install:
   - wget https://raw.githubusercontent.com/Vincit/travis-oracledb-xe/master/accept_the_license_agreement_for_oracledb_xe_11g_and_install.sh
   - bash ./accept_the_license_agreement_for_oracledb_xe_11g_and_install.sh
+  - echo exit | sqlplus sys/travis@$127.0.0.1:1521/XE as sysdba @test/travis.sql $(pwd)/log/
 install:
   - wget https://s3.amazonaws.com/rebar3/rebar3
   - chmod +x rebar3
 before_script:
   - kerl list installations
 script:
-  - ls -alF $ORACLE_HOME
-  - wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb
-  - wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-sqlplus_19.3.0.0.0-2_amd64.deb
-  - sudo apt install /tmp/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb
-  - sudo apt install /tmp/oracle-instantclient19.3-sqlplus_19.3.0.0.0-2_amd64.deb
-  - export LD_LIBRARY_PATH=/usr/lib/oracle/19.3/client64/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+  - ls -alF $ORACLE_HOME/lib
+  #- wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb
+  #- wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-sqlplus_19.3.0.0.0-2_amd64.deb
+  #- sudo apt install /tmp/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb
+  #- sudo apt install /tmp/oracle-instantclient19.3-sqlplus_19.3.0.0.0-2_amd64.deb
+  - export LD_LIBRARY_PATH=$ORACLE_HOME/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
   - echo $LD_LIBRARY_PATH
   - OTP_ERTS_DIR="$(ls -d ~/otp/$TRAVIS_OTP_RELEASE/erts*/)"
   - export OTP_ERTS_DIR="${OTP_ERTS_DIR:0:$((${#OTP_ERTS_DIR} - 1))}"
   - export LD_LIBRARY_PATH=./priv/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-#  - echo exit | sqlplus sys/oracle@$DOCKER_MACHINE_IP:1521/XE as sysdba @test/travis.sql $(pwd)/log/
+#  - echo exit | sqlplus sys/travis@$127.0.0.1:1521/XE as sysdba @test/travis.sql $(pwd)/log/
   - rebar3 as test compile
 #  - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/jamdb_oracle_SUITE

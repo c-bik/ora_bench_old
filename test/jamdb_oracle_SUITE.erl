@@ -56,12 +56,12 @@ insert(ConnRef, SqlFmt, Count) ->
 			end,
 			insert(ConnRef, SqlFmt, Count + 1);
 		{ok, [{proc_result, _, Error}]} ->
-			ct:pal("===> Abort reason ~p", [Error]),
 			io:format(user, " ~p~n", [Count]),
+			ct:pal("===> Abort reason ~s", [Error]),
 			Count;
 		Error ->
-			ct:pal("===> Abort reason ~p", [Error]),
 			io:format(user, " ~p~n", [Count]),
+			ct:pal("===> Abort reason ~p", [Error]),
 			Count
 	end.
 
@@ -89,9 +89,13 @@ select(ConnRef, SqlFmt, Count) ->
 				true -> ok
 			end,
 			select(ConnRef, SqlFmt, Count + 1);
-		Error ->
+		{ok, [{proc_result, _, Error}]} ->
 			io:format(user, " ~p~n", [Count]),
+			ct:pal("===> Abort reason ~s", [Error]),
+			Count;
+		Error ->
 			ct:pal("===> Abort reason ~p", [Error]),
+			io:format(user, " ~p~n", [Count]),
 			Count
 	end.
 

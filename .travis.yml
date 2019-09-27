@@ -47,6 +47,6 @@ script:
  - docker ps -a
  #- cd test/
  #- make
- - echo exit | sqlplus sys/oracle@$DOCKER_MACHINE_IP:1521/XE as sysdba @test/travis.sql $(pwd)/log/
  #- cd -
- - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg
+ - echo exit | sqlplus sys/oracle@$DOCKER_MACHINE_IP:1521/XE as sysdba @test/travis.sql $(pwd)/log/
+ - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg --suite=test/oranif_SUITE

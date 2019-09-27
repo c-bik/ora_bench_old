@@ -5,6 +5,7 @@ otp_release:
 env:
   - ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe ORACLE_SID=XE
 before_install:
+  - export PATH=$PATH:$ORACLE_HOME/bin/
   - wget https://raw.githubusercontent.com/Vincit/travis-oracledb-xe/master/accept_the_license_agreement_for_oracledb_xe_11g_and_install.sh
   - bash ./accept_the_license_agreement_for_oracledb_xe_11g_and_install.sh
   - echo exit | sqlplus sys/travis@$127.0.0.1:1521/XE as sysdba @test/travis.sql $(pwd)/log/
@@ -14,7 +15,7 @@ install:
 before_script:
   - kerl list installations
 script:
-  - ls -alF $ORACLE_HOME/lib
+  - ls -alF $ORACLE_HOME/
   #- wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb
   #- wget -q -P /tmp https://github.com/K2InformaticsGmbH/oranif/wiki/travis/oracle-instantclient19.3-sqlplus_19.3.0.0.0-2_amd64.deb
   #- sudo apt install /tmp/oracle-instantclient19.3-basic_19.3.0.0.0-2_amd64.deb

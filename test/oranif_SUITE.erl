@@ -57,6 +57,7 @@ insert(Connection, User, Password) ->
 		Conn, false, l2b(ct:get_config(insert_oranif)), <<>>
 	),
 	dpi:stmt_bindByName(Stmt, <<"ITEM">>, ItemVar),
+
 	Inserted = set_from_bytes(ItemVar, Stmt),
 
 	dpi:conn_commit(Conn),
@@ -76,16 +77,28 @@ select(Connection, User, Password) ->
 	Stmt = dpi:conn_prepareStmt(Conn, false, l2b(ct:get_config(select)), <<>>),
 	dpi:stmt_execute(Stmt, []),
 
-	dpi:stmt_fetch(Stmt),
-	#{data := Data} = dpi:stmt_getQueryValue(Stmt, 1),
-	10 = byte_size(dpi:data_get(Data)),
-	dpi:data_release(Data),
+	Selected = get_bytes(Stmt),
 
 	dpi:conn_commit(Conn),
 	dpi:stmt_close(Stmt, <<>>),
 	dpi:conn_close(Conn, [], <<>>),
 	dpi:context_destroy(Ctx),
-	0.
+	Selected.
+
+get_bytes(Stmt) -> get_bytes(Stmt, dpi:stmt_fetch(Stmt), 0).
+get_bytes(_Stmt, #{found := false}, Count) ->
+	io:format(user, " ~p~n", [Count]),
+	Count;
+get_bytes(Stmt, #{found := true}, Count) ->
+	#{data := Data} = dpi:stmt_getQueryValue(Stmt, 1),
+	10 = byte_size(dpi:data_get(Data)),
+	dpi:data_release(Data),
+	if
+		Count rem ?MAX_VARS == 0 ->
+			io:format(user, " ~p", [Count]);
+		true -> ok
+	end,
+	get_bytes(Stmt, dpi:stmt_fetch(Stmt), Count + 1).
 
 l2b(B) when is_binary(B) -> B;
 l2b(L) when is_list(L) -> list_to_binary(L).
@@ -96,8 +109,9 @@ set_from_bytes(Last, Count, ItemVar, Stmt) when Count - Last >= ?MAX_VARS ->
 		ok ->
 			io:format(user, " ~p", [Count]),
 			set_from_bytes(Count, Count, ItemVar, Stmt);
-		_ ->
-			io:format(user, "~n", []),
+		Error ->
+			ct:pal("DB Limits reached~n~p", [Error]),
+			io:format(user, " ~p~n", [Count]),
 			Count
 	end;
 set_from_bytes(LastCount, Count, ItemVar, Stmt) ->

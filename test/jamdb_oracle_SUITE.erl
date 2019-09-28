@@ -7,14 +7,10 @@
 -define(DPI_MINOR_VERSION, 0).
 -define(MAX_NUMBERS, 100000).
 
-all() ->
-  {ok, IoDev} = file:open("/home/travis/ora_bench_test_result.txt", [append, raw]),
-  ok = file:write(IoDev, list_to_binary(io_lib:format("~p:~p JAMDB~n", [?MODULE, ?LINE]))),
-  ok = file:close(IoDev),
-%  [test].
-  [].
+all() -> [test].
 
 test(_) ->
+  {ok, IoDev} = file:open(ct:get_config(report), [append, raw]),
   Opts = [
     {host, ct:get_config(host)},
     {port, 1521},
@@ -26,20 +22,39 @@ test(_) ->
   try
     {InsertTime, Inserted} = timer:tc(fun insert/1, [Opts]),
     InsertSec = InsertTime / 1000000,
+    InsertRate = Inserted / InsertSec,
     ct:pal(
       "JAMDB inserted ~p rows in ~p seconds (~p rows / sec)",
-      [Inserted, InsertSec, Inserted / InsertSec]
+      [Inserted, InsertSec, InsertRate]
+    ),
+    ok = file:write(
+      IoDev, list_to_binary(
+        io_lib:format(
+          "JAMDBO\tINSERT\t~p rows in ~p seconds (~p rows/sec)~n",
+          [Inserted, InsertSec, InsertRate]
+        )
+      )
     ),
     {SelectTime, Selected} = timer:tc(fun select/1, [Opts]),
     SelectSec = SelectTime / 1000000,
+    SelectRate = Selected / SelectSec,
     ct:pal(
       "JAMDB selected ~p rows in ~p seconds (~p rows / sec)",
-      [Selected, SelectSec, Selected / SelectSec]
+      [Selected, SelectSec, SelectRate]
+    ),
+    ok = file:write(
+      IoDev, list_to_binary(
+        io_lib:format(
+          "JAMDBO\tSELECT\t~p rows in ~p seconds (~p rows/sec)~n",
+          [Selected, SelectSec, SelectRate]
+        )
+      )
     )
   catch
     Class:Error ->
       ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
-  end.
+  end,
+  ok = file:close(IoDev).
 
 insert([{_,_} | _] = Opts) ->
   try setup(Opts) of

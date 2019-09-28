@@ -27,6 +27,15 @@ void dpi_error(dpiContext *ctx, dpiErrorInfo err, unsigned line)
 
 int main(const int argc, char *argv[])
 {
+  FILE *logFp = fopen("/home/travis/ora_bench_test_report.log", "a");
+  if(!logFp) {
+    fprintf(
+      stderr,
+      "ERROR: unable to open /home/travis/ora_bench_test_report.log\n"
+    );
+    exit(1);
+  }
+
   if(argc != 6) {
     fprintf(stderr, "Parameters : user password host port serviceName\n");
     exit(1);
@@ -152,9 +161,15 @@ int main(const int argc, char *argv[])
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  double rate = count / time_spent;
   printf(
     "\nODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
-    count, time_spent, count / time_spent
+    count, time_spent, rate
+  );
+  fprintf(
+    logFp,
+    "ODPI-C\tINSERT\t%lu rows in %f seconds (%f rows/sec)~n",
+    count, time_spent, rate
   );
 
   begin = end;
@@ -203,13 +218,20 @@ int main(const int argc, char *argv[])
 
   end = clock();
   time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  rate = count / time_spent;
   printf(
     "\nODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
-    count, time_spent, count / time_spent
+    count, time_spent, rate
+  );
+  fprintf(
+    logFp,
+    "ODPI-C\tSELECT\t%lu rows in %f seconds (%f rows/sec)~n",
+    count, time_spent, rate
   );
 
   dpiConn_close(conn, DPI_MODE_CONN_CLOSE_DEFAULT, NULL, 0);
   dpiContext_destroy(ctx);
 
+  fclose(logFp);
   return 0;
 }

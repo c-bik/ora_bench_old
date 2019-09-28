@@ -8,14 +8,11 @@
 -define(MAX_VARS, 100000).
 
 all() ->
-  {ok, IoDev} = file:open("/home/travis/ora_bench_test_result.txt", [append, raw]),
-  ok = file:write(IoDev, list_to_binary(io_lib:format("~p:~p ORANIF~n", [?MODULE, ?LINE]))),
-  ok = file:close(IoDev),
-%  dpi:load_unsafe(),
-%  [test].
-  [].
+  dpi:load_unsafe(),
+  [test].
 
 test(_) ->
+  {ok, IoDev} = file:open(ct:get_config(report), [append, raw]),
   ConnFmt = ct:get_config(connection),
   User = l2b(ct:get_config(user)),
   Password = l2b(ct:get_config(password)),
@@ -34,22 +31,41 @@ test(_) ->
       fun insert/3, [Connection, User, Password]
     ),
     InsertSec = InsertTime / 1000000,
+    InsertRate = Inserted / InsertSec,
     ct:pal(
       "ORANIF inserted ~p rows in ~p seconds (~p rows/sec)",
-      [Inserted, InsertSec, Inserted / InsertSec]
+      [Inserted, InsertSec, InsertRate]
+    ),
+    ok = file:write(
+      IoDev, list_to_binary(
+        io_lib:format(
+          "ORANIF\tINSERT\t~p rows in ~p seconds (~p rows/sec)~n",
+          [Inserted, InsertSec, InsertRate]
+        )
+      )
     ),
     {SelectTime, Selected} = timer:tc(
       fun select/3, [Connection, User, Password]
     ),
     SelectSec = SelectTime / 1000000,
+    SelectRate = Selected / SelectSec,
     ct:pal(
       "ORANIF selected ~p rows in ~p seconds (~p rows/sec)",
-      [Selected, SelectSec, Selected / SelectSec]
+      [Selected, SelectSec, SelectRate]
+    ),
+    ok = file:write(
+      IoDev, list_to_binary(
+        io_lib:format(
+          "ORANIF\tSELECT\t~p rows in ~p seconds (~p rows/sec)~n",
+          [Selected, SelectSec, SelectRate]
+        )
+      )
     )
   catch
     Class:Error ->
     ct:pal("ERROR: ~p:~p~n~p", [Class, Error, erlang:get_stacktrace()])
-  end.
+  end,
+  ok = file:close(IoDev).
 
 insert(Connection, User, Password) ->
   Ctx = dpi:context_create(?DPI_MAJOR_VERSION, ?DPI_MINOR_VERSION),

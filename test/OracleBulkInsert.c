@@ -8,12 +8,13 @@
 #include <time.h>
 
 // config
-#define NAME "scott"
-#define PASS "regit"
-#define CONN "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=XE)))"
-#define MAX_NUMBERS 100000
+#define CONNFMT "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVICE_NAME=%s)))"
+#define DROP "drop table test"
+#define CREATE "create table test (item varchar2(4000))"
+#define INSERT "insert into test (ITEM) values (:ITEM)"
+#define SELECT "select ITEM from test"
 
-void mtracError(dpiContext *ctx, dpiErrorInfo err, unsigned line)
+void dpi_error(dpiContext *ctx, dpiErrorInfo err, unsigned line)
 {
   if (ctx != NULL)
   dpiContext_getError(ctx, &err);
@@ -24,26 +25,67 @@ void mtracError(dpiContext *ctx, dpiErrorInfo err, unsigned line)
   );
 }
 
-int main(const int argCount, char *argVec[])
+int main(const int argc, char *argv[])
 {
+  if(argc != 6) {
+    fprintf(stderr, "Parameters : user password host port serviceName\n");
+    exit(1);
+  }
+  char
+    *user = argv[1],
+    *password = argv[2],
+    *host = argv[3],
+    *port = argv[4],
+    *service = argv[5],
+    connection[512];
+  sprintf(connection, CONNFMT, host, port, service);
+
   dpiContext *ctx;
   dpiErrorInfo err;
 
   if (dpiContext_create(DPI_MAJOR_VERSION, DPI_MINOR_VERSION, &ctx, &err) < 0) {
-    mtracError(NULL, err, __LINE__);
+    dpi_error(NULL, err, __LINE__);
     exit(1);
   }
 
   dpiConn *conn;
   if (
     dpiConn_create(
-      ctx, NAME, strlen(NAME), PASS, strlen(PASS), CONN, strlen(CONN),
-      NULL, NULL, &conn
+      ctx, user, strlen(user), password, strlen(password),
+      connection, strlen(connection), NULL, NULL, &conn
     ) < 0
   ) {
-    mtracError(ctx, err, __LINE__);
+    dpi_error(ctx, err, __LINE__);
     exit(1);
   }
+  
+  printf("[%s:%d] Connected\n", __FILE__, __LINE__);
+
+  dpiStmt *stmt;
+
+  // Drop the existing table
+  if (dpiConn_prepareStmt(conn, 0, DROP, strlen(DROP), NULL, 0, &stmt) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    exit(1);
+  }
+  if (dpiStmt_execute(stmt, DPI_MODE_EXEC_COMMIT_ON_SUCCESS, NULL) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    // Table also may not exist, we can continue
+  }
+  dpiStmt_close(stmt, NULL, 0);
+
+  // Create the table
+  if (dpiConn_prepareStmt(conn, 0, CREATE, strlen(CREATE), NULL, 0, &stmt) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    exit(1);
+  }
+  if (dpiStmt_execute(stmt, DPI_MODE_EXEC_COMMIT_ON_SUCCESS, NULL) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    exit(1);
+  }
+  dpiStmt_close(stmt, NULL, 0);
+
+  printf("[%s:%d] Initialized\n", __FILE__, __LINE__);
 
   dpiData *arrayValue;
   dpiVar *stringColVar;
@@ -54,64 +96,108 @@ int main(const int argCount, char *argVec[])
       maxArraySize, 16, 1, 0, NULL, &stringColVar, &arrayValue
     ) < 0
   ) {
-    mtracError(ctx, err, __LINE__);
+    dpi_error(ctx, err, __LINE__);
     exit(1);
   }
 
-  dpiStmt *stmt;
-  const char *sql = "insert into test (ITEM) values (:ITEM)";
-  if (dpiConn_prepareStmt(conn, 0, sql, strlen(sql), NULL, 0, &stmt) < 0) {
-    mtracError(ctx, err, __LINE__);
+  if (dpiConn_prepareStmt(conn, 0, INSERT, strlen(INSERT), NULL, 0, &stmt) < 0) {
+    dpi_error(ctx, err, __LINE__);
     exit(1);
   }
 
   if (dpiStmt_bindByName(stmt, "ITEM", strlen("ITEM"), stringColVar) < 0) {
-    mtracError(ctx, err, __LINE__);
+    dpi_error(ctx, err, __LINE__);
     exit(1);
   }
 
-  char c[] = "41790000000\r\n";
+  char c[12];
   unsigned long count = 0;
   clock_t begin = clock();
   uint32_t idx = 0;
   do {
     c[11] = '\0';
-    sprintf(c, "4179%07lu", count);
+    sprintf(c, "%010lu", count);
     count++;
     if (dpiVar_setFromBytes(stringColVar, idx, c, strlen(c)) < 0) {
-        mtracError(ctx, err, __LINE__);
+        dpi_error(ctx, err, __LINE__);
         exit(1);
     }
     idx++;
     if (idx >= maxArraySize) {
       idx = 0;
       if (dpiStmt_executeMany(stmt, DPI_MODE_EXEC_DEFAULT, maxArraySize) < 0) {
-        mtracError(ctx, err, __LINE__);
-        exit(1);
+        dpi_error(ctx, err, __LINE__);
+        break;
       }
     }
 
     if (count % 100000 == 0)
-    printf("%lu\n", count);
+      printf(" %lu", count);
 
-  } while (count < MAX_NUMBERS);
+  } while (count < 100);
 
   if (
     idx > 0 &&
     dpiStmt_executeMany(stmt, DPI_MODE_EXEC_DEFAULT, idx) < 0
   ) {
-    mtracError(ctx, err, __LINE__);
+    dpi_error(ctx, err, __LINE__);
     exit(1);
   }
   dpiConn_commit(conn);
   dpiStmt_close(stmt, NULL, 0);
   dpiVar_release(stringColVar);
-  dpiConn_close(conn, DPI_MODE_CONN_CLOSE_DEFAULT, NULL, 0);
-  dpiContext_destroy(ctx);
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("%lu rows inserted in %f seconds\n", count, time_spent);
+  printf("ODPI-C inserted %lu rows in %f seconds\n", count, time_spent);
+
+  begin = end;
+
+  if (dpiConn_prepareStmt(conn, 0, SELECT, strlen(SELECT), NULL, 0, &stmt) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    exit(1);
+  }
+  if (dpiStmt_execute(stmt, DPI_MODE_EXEC_DEFAULT, NULL) < 0) {
+    dpi_error(ctx, err, __LINE__);
+    exit(1);
+  }
+
+  dpiNativeTypeNum nativeTypeNum;
+  dpiData *data;
+  count = 0;
+  int found;
+  uint32_t bufferRowIndex;
+  dpiBytes *bytes;
+  do {
+    if (dpiStmt_fetch(stmt, &found, &bufferRowIndex)) {
+      dpi_error(ctx, err, __LINE__);
+      break;
+    }
+    if(found < 1) break;
+  
+    if (dpiStmt_getQueryValue(stmt, 1, &nativeTypeNum, &data)) {
+      dpi_error(ctx, err, __LINE__);
+      break;
+    }
+
+    bytes = dpiData_getBytes(data);
+    if(bytes->length != 10) {
+      fprintf(stderr, "bad read length %d\n", bytes->length);
+      break;
+    }
+  
+    count++;
+    if (count % 100000 == 0)
+      printf(" %lu", count);
+
+  } while (1);
+
+  end = clock();
+  time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  printf("ODPI-C selected %lu rows in %f seconds\n", count, time_spent);
+
+  dpiConn_close(conn, DPI_MODE_CONN_CLOSE_DEFAULT, NULL, 0);
+  dpiContext_destroy(ctx);
 
   return 0;
 }

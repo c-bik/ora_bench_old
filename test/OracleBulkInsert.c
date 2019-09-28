@@ -150,7 +150,7 @@ int main(const int argc, char *argv[])
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
   printf(
-    "ODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
+    "\n\nODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
     count, time_spent, count / time_spent
   );
 
@@ -198,7 +198,7 @@ int main(const int argc, char *argv[])
   end = clock();
   time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
   printf(
-    "ODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
+    "\n\nODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
     count, time_spent, count / time_spent
   );
 

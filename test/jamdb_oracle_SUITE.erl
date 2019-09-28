@@ -22,13 +22,13 @@ test(_) ->
     {InsertTime, Inserted} = timer:tc(fun insert/1, [Opts]),
     InsertSec = InsertTime / 1000000,
     ct:pal(
-      "JAMDB inserted ~p rows in ~p seconds (%p rows / sec)",
+      "JAMDB inserted ~p rows in ~p seconds (~p rows / sec)",
       [Inserted, InsertSec, Inserted / InsertSec]
     ),
     {SelectTime, Selected} = timer:tc(fun select/1, [Opts]),
     SelectSec = SelectTime / 1000000,
     ct:pal(
-      "JAMDB selected ~p rows in ~p seconds (%p rows / sec)",
+      "JAMDB selected ~p rows in ~p seconds (~p rows / sec)",
       [Selected, SelectSec, Selected / SelectSec]
     )
   catch

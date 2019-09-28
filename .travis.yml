@@ -22,5 +22,5 @@ script:
   - cd test
   - make
   - bin/OracleBulkInsert scott regit 127.0.0.1 1521 XE
-  - cd -
-  - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg
+  #- cd -
+  #- rebar3 ct --verbose=true --readable=false --config=test/ct.cfg

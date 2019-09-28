@@ -24,4 +24,4 @@ script:
 #  - make
 #  - bin/OracleBulkInsert scott regit 127.0.0.1 1521 XE
 after_success:
-  echo ~/ora_bench_test_result.txt
+  cat ~/ora_bench_test_result.txt

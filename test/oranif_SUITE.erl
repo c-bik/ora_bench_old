@@ -8,7 +8,7 @@
 -define(MAX_VARS, 100000).
 
 all() ->
-  {ok, IoDev} = file:open("~/ora_bench_test_result.txt", [append, raw]),
+  {ok, IoDev} = file:open("/home/travis/ora_bench_test_result.txt", [append, raw]),
   ok = file:write(IoDev, list_to_binary(io_lib:format("~p:~p ORANIF~n", [?MODULE, ?LINE]))),
   ok = file:close(IoDev),
 %  dpi:load_unsafe(),

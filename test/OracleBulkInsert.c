@@ -134,7 +134,7 @@ int main(const int argc, char *argv[])
     if (count % 100000 == 0)
       printf(" %lu", count);
 
-  } while (count < 100);
+  } while (1);
 
   if (
     idx > 0 &&
@@ -149,7 +149,10 @@ int main(const int argc, char *argv[])
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("ODPI-C inserted %lu rows in %f seconds\n", count, time_spent);
+  printf(
+    "ODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
+    count, time_spent, count / time_spent
+  );
 
   begin = end;
 
@@ -194,7 +197,10 @@ int main(const int argc, char *argv[])
 
   end = clock();
   time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("ODPI-C selected %lu rows in %f seconds\n", count, time_spent);
+  printf(
+    "ODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
+    count, time_spent, count / time_spent
+  );
 
   dpiConn_close(conn, DPI_MODE_CONN_CLOSE_DEFAULT, NULL, 0);
   dpiContext_destroy(ctx);

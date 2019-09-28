@@ -114,6 +114,7 @@ int main(const int argc, char *argv[])
   unsigned long count = 0;
   clock_t begin = clock();
   uint32_t idx = 0;
+  printf("[%s:%d] Inserting...\n", __FILE__, __LINE__);
   do {
     c[11] = '\0';
     sprintf(c, "%010lu", count);
@@ -131,8 +132,10 @@ int main(const int argc, char *argv[])
       }
     }
 
-    if (count % 100000 == 0)
+    if (count % 100000 == 0) {
       printf(" %lu", count);
+      fflush(stdout);
+    }
 
   } while (1);
 
@@ -150,7 +153,7 @@ int main(const int argc, char *argv[])
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
   printf(
-    "\n\nODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
+    "\nODPI-C inserted %lu rows in %f seconds (%f rows / sec)\n",
     count, time_spent, count / time_spent
   );
 
@@ -171,6 +174,7 @@ int main(const int argc, char *argv[])
   int found;
   uint32_t bufferRowIndex;
   dpiBytes *bytes;
+  printf("[%s:%d] Selecting...\n", __FILE__, __LINE__);
   do {
     if (dpiStmt_fetch(stmt, &found, &bufferRowIndex)) {
       dpi_error(ctx, err, __LINE__);
@@ -190,15 +194,17 @@ int main(const int argc, char *argv[])
     }
   
     count++;
-    if (count % 100000 == 0)
+    if (count % 100000 == 0) {
       printf(" %lu", count);
+      fflush(stdout);
+    }
 
   } while (1);
 
   end = clock();
   time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
   printf(
-    "\n\nODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
+    "\nODPI-C selected %lu rows in %f seconds (%f rows / sec)\n",
     count, time_spent, count / time_spent
   );
 

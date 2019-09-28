@@ -8,6 +8,9 @@
 -define(MAX_VARS, 100000).
 
 all() ->
+  {ok, Dir} = file:get_cwd(),
+  ct:pal("~p:~p ~s", [?MODULE, ?LINE, Dir]),
+  error(abort),
   dpi:load_unsafe(),
   [test].
 

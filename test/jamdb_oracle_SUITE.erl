@@ -7,7 +7,11 @@
 -define(DPI_MINOR_VERSION, 0).
 -define(MAX_NUMBERS, 100000).
 
-all() -> [test].
+all() ->
+  {ok, Dir} = file:get_cwd(),
+  ct:pal("~p:~p ~s", [?MODULE, ?LINE, Dir]),
+  error(abort),
+  [test].
 
 test(_) ->
   Opts = [

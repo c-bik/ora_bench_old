@@ -20,7 +20,7 @@ void dpi_error(dpiContext *ctx, dpiErrorInfo err, unsigned line)
   dpiContext_getError(ctx, &err);
 
   printf(
-    "%d: ERROR: %.*s (%s: %s)\n",
+    "\n%d: ERROR: %.*s (%s: %s)\n",
     line, err.messageLength, err.message, err.fnName, err.action
   );
 }

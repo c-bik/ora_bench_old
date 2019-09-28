@@ -19,8 +19,7 @@ script:
   - OTP_ERTS_DIR="$(ls -d ~/otp/$TRAVIS_OTP_RELEASE/erts*/)"
   - export OTP_ERTS_DIR="${OTP_ERTS_DIR:0:$((${#OTP_ERTS_DIR} - 1))}"
   - export LD_LIBRARY_PATH=./priv/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-  #- rebar3 ct --verbose=true --readable=false --config=test/ct.cfg
-  - rebar3 as test compile
+  - rebar3 ct --verbose=true --readable=false --config=test/ct.cfg
   - cd test
   - make
   - bin/OracleBulkInsert scott regit 127.0.0.1 1521 XE

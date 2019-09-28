@@ -24,5 +24,6 @@ script:
   - cd test
   - make
   - bin/OracleBulkInsert scott regit 127.0.0.1 1521 XE
+  - cd -
 after_success:
   cat /home/travis/ora_bench_test_report.log

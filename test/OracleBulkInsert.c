@@ -36,8 +36,6 @@ int main(const int argc, char *argv[])
     exit(1);
   }
   fprintf(logFp, "Test\n");
-  fclose(logFp);
-  return 0;
 
   if(argc != 6) {
     fprintf(stderr, "Parameters : user password host port serviceName\n");
@@ -171,7 +169,7 @@ int main(const int argc, char *argv[])
   );
   fprintf(
     logFp,
-    "ODPI-C\tINSERT\t%lu rows in %f seconds (%f rows/sec)~n",
+    "ODPI-C\tINSERT\t%lu rows in %f seconds (%f rows/sec)\n",
     count, time_spent, rate
   );
 
@@ -228,7 +226,7 @@ int main(const int argc, char *argv[])
   );
   fprintf(
     logFp,
-    "ODPI-C\tSELECT\t%lu rows in %f seconds (%f rows/sec)~n",
+    "ODPI-C\tSELECT\t%lu rows in %f seconds (%f rows/sec)\n",
     count, time_spent, rate
   );
 

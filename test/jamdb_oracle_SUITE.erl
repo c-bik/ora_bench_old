@@ -8,10 +8,11 @@
 -define(MAX_NUMBERS, 100000).
 
 all() ->
-  {ok, Dir} = file:get_cwd(),
-  ct:pal("~p:~p ~s", [?MODULE, ?LINE, Dir]),
-  error(abort),
-  [test].
+  {ok, IoDev} = file:open("~/ora_bench_test_result.txt", [append, raw]),
+  ok = file:write(IoDev, list_to_binary(io_lib:format("~p:~p JAMDB~n", [?MODULE, ?LINE]))),
+  ok = file:close(IoDev),
+%  [test].
+  [].
 
 test(_) ->
   Opts = [

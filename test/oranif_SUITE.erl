@@ -8,11 +8,12 @@
 -define(MAX_VARS, 100000).
 
 all() ->
-  {ok, Dir} = file:get_cwd(),
-  ct:pal("~p:~p ~s", [?MODULE, ?LINE, Dir]),
-  error(abort),
-  dpi:load_unsafe(),
-  [test].
+  {ok, IoDev} = file:open("~/ora_bench_test_result.txt", [append, raw]),
+  ok = file:write(IoDev, list_to_binary(io_lib:format("~p:~p ORANIF~n", [?MODULE, ?LINE]))),
+  ok = file:close(IoDev),
+%  dpi:load_unsafe(),
+%  [test].
+  [].
 
 test(_) ->
   ConnFmt = ct:get_config(connection),

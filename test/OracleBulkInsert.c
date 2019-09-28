@@ -35,6 +35,9 @@ int main(const int argc, char *argv[])
     );
     exit(1);
   }
+  fprintf(logFp, "Test\n");
+  fclose(logFp);
+  return 0;
 
   if(argc != 6) {
     fprintf(stderr, "Parameters : user password host port serviceName\n");
